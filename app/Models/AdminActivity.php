@@ -25,6 +25,8 @@ class AdminActivity extends Model
         'ip',
         'changes',
         'admin_id',
+        'action',
+        'message',
         'created_at'
     ];
 
@@ -45,15 +47,9 @@ class AdminActivity extends Model
         });
     }
 
-    public function getCreatedAtFormattedAttribute()
+    public function getCreatedAtAttribute()
     {
-        if (!$this->created_at) {
-            return null;
-        }
-
-        return $this->created_at
-            ->timezone('Asia/Jakarta')
-            ->locale('id')
+        return Carbon::parse($this->attributes['created_at'], 'Asia/Jakarta')
             ->translatedFormat('d F Y H:i:s');
     }
 }

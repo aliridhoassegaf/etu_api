@@ -18,6 +18,7 @@ class AdminRole extends Model
 
     protected $fillable = [
         'name',
+        'description',
         'admin_permission',
         'status'
     ];
@@ -56,4 +57,17 @@ class AdminRole extends Model
         return Carbon::parse($this->attributes['updated_at'], 'Asia/Jakarta')
             ->translatedFormat('d F Y H:i:s');
     }
+
+    public function getStatusNameAttribute()
+    {
+        return match ((int) $this->status) {
+            1 => 'Active',
+            2 => 'Not Active',
+            default => 'Unknown',
+        };
+    }
+
+    protected $appends = [
+        'status_name',
+    ];
 }

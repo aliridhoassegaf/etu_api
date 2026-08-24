@@ -36,8 +36,8 @@ class AdminAccessController extends Controller
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('admin_access.name', 'like', '%' . $search . '%')
-                        ->orWhere('admin_access.initial', 'like', '%' . $search . '%');
+                    $q->where('admin_access.name', 'ilike', '%' . $search . '%')
+                        ->orWhere('admin_access.initial', 'ilike', '%' . $search . '%');
                 });
             }
 

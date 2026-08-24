@@ -4,51 +4,75 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\AdminRole;
+use App\Models\AdminActivity;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\DB;
-use App\Models\AdminActivity;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class AdminRoleController extends Controller
+class AdminActivityController extends Controller
 {
     public function read(Request $request)
     {
         try {
 
+            $request->validate([
+                'created_start' => 'nullable|date',
+                'created_end' => 'nullable|date',
+            ]);
+
             $search = $request->search;
-            $status = $request->status;
+            $createdStart = $request->created_start;
+            $createdEnd = $request->created_end;
+            $admin_id = $request->admin_id;
             $perPage = $request->per_page ?? 20;
 
-            $query = AdminRole::select(
-                'admin_role.id',
-                'admin_role.name',
-                'admin_role.slug',
-                'admin_role.description',
-                'admin_role.status',
-                'admin_role.created_at',
-            );
+            $query = AdminActivity::select(
+                'admin_activity.id',
+                'admin_activity.target_id',
+                'admin_activity.target_name',
+                'admin_activity.description',
+                'admin_activity.ip',
+                'admin_activity.admin_id',
+                'admin_activity.action',
+                'admin_activity.created_at',
+                'admin.fullname as admin_fullname'
+            )
+            ->join('admin', 'admin_activity.admin_id', '=', 'admin.id');
 
-            $query->where('admin_role.id', '!=', env('UUID_SUPER'));
+            if ($createdStart && $createdEnd) {
+                $query->whereBetween('admin_activity.created_at', [
+                    $createdStart . ' 00:00:00',
+                    $createdEnd . ' 23:59:59'
+                ]);
+            } elseif ($createdStart) {
+                $query->whereDate('admin_activity.created_at', '>=', $createdStart);
+            } elseif ($createdEnd) {
+                $query->whereDate('admin_activity.created_at', '<=', $createdEnd);
+            }
+
+            $query->where('admin_activity.admin_id', '!=', env('UUID_SUPER'));
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('admin_role.name', 'ilike', '%' . $search . '%');
+                    $q->where('admin_activity.target_name', 'ilike', '%' . $search . '%')
+                        ->orWhere('admin_activity.description', 'ilike', '%' . $search . '%')
+                        ->orWhere('admin_activity.ip', 'ilike', '%' . $search . '%')
+                        ->orWhere('admin_activity.action', 'ilike', '%' . $search . '%');
                 });
             }
 
-            if ($status !== null) {
-                $query->where('admin_role.status', $status);
+            if ($admin_id !== null) {
+                $query->where('admin_activity.admin_id', $admin_id);
             }
 
-            $data = $query->orderBy('admin_role.created_at', 'desc')
+            $data = $query->orderBy('admin_activity.created_at', 'desc')
                 ->paginate($perPage)
-                ->withPath(env('DASHBOARD_URL') . '/admin-role')
+                ->withPath(env('DASHBOARD_URL') . '/admin-activity')
                 ->appends($request->query());
 
             $hasFilter =
                 $request->filled('search') ||
-                $request->filled('status');
+                $request->filled('admin_id');
 
             if ($data->total() === 0) {
 

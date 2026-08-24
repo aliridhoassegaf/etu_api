@@ -13,6 +13,102 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+
+    public function read(Request $request)
+    {
+        try {
+
+            $search = $request->search;
+            $status = $request->status;
+            $admin_role_id = $request->admin_role_id;
+            $perPage = $request->per_page ?? 20;
+
+            $query = Admin::select(
+                'admin.id',
+                'admin.fullname',
+                'admin.email',
+                'admin.phone',
+                'admin.admin_role_id',
+                'admin.status',
+                'admin.created_at',
+                'admin_role.name as admin_role_name'
+            )
+                ->join('admin_role', 'admin.admin_role_id', '=', 'admin_role.id');
+
+            $query->where('admin.id', '!=', env('UUID_SUPER'));
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('admin.fullname', 'ilike', '%' . $search . '%')
+                        ->orWhere('admin.email', 'ilike', '%' . $search . '%');
+                });
+            }
+
+            if ($status !== null) {
+                $query->where('admin.status', $status);
+            }
+
+            if ($admin_role_id !== null) {
+                $query->where('admin.admin_role_id', $admin_role_id);
+            }
+
+            $data = $query->orderBy('admin.created_at', 'desc')
+                ->paginate($perPage)
+                ->withPath(env('DASHBOARD_URL') . '/admin')
+                ->appends($request->query());
+
+            $hasFilter =
+                $request->filled('search') ||
+                $request->filled('admin_role_id') ||
+                $request->filled('status');
+
+            if ($data->total() === 0) {
+
+                $dataState = $hasFilter
+                    ? 'filtered_empty'
+                    : 'empty';
+
+            } else {
+
+                $dataState = 'has_data';
+
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data->items(),
+                'data_state' => $dataState,
+                'pagination' => [
+                    'total' => $data->total(),
+                    'per_page' => $data->perPage(),
+                    'current_page' => $data->currentPage(),
+                    'last_page' => $data->lastPage(),
+                    'from' => $data->firstItem(),
+                    'to' => $data->lastItem(),
+
+                    'first_page_url' => $data->url(1),
+                    'last_page_url' => $data->url($data->lastPage()),
+                    'next_page_url' => $data->nextPageUrl(),
+                    'prev_page_url' => $data->previousPageUrl(),
+                    'path' => $data->path()
+                ]
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
     public function login(Request $request)
     {
         try {

@@ -69,6 +69,19 @@ class Admin extends Authenticatable implements JWTSubject
         'password'
     ];
 
+    public function getStatusNameAttribute()
+    {
+        return match ((int) $this->status) {
+            1 => 'Active',
+            2 => 'Not Active',
+            default => 'Unknown',
+        };
+    }
+
+    protected $appends = [
+        'status_name',
+    ];
+
     public function getJWTIdentifier()
     {
         return $this->getKey();
