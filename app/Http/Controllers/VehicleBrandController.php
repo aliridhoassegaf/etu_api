@@ -4,50 +4,69 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\UserStatus;
+use App\Models\VehicleBrand;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\AdminActivity;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class UserStatusController extends Controller
+class VehicleBrandController extends Controller
 {
     public function read(Request $request)
     {
         try {
 
             $search = $request->search;
+            $status = $request->status;
             $perPage = $request->per_page ?? 20;
-            $with_sort = $request->with_sort;
 
-            $query = UserStatus::select(
-                'user_status.id',
-                'user_status.name',
-                'user_status.sort',
-                'user_status.status',
-                'user_status.created_at',
-                'user_status.updated_at',
+            $query = VehicleBrand::select(
+                'vehicle_brand.id',
+                'vehicle_brand.name',
+                'vehicle_brand.slug',
+                'vehicle_brand.description',
+                'vehicle_brand.status',
+                'vehicle_brand.created_at',
             );
+
+            $query->where('vehicle_brand.id', '!=', env('UUID_SUPER'));
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('user_status.name', 'ilike', '%' . $search . '%');
+                    $q->where('vehicle_brand.name', 'ilike', '%' . $search . '%');
                 });
             }
 
-            $sortField = $with_sort == 1 ? 'user_status.sort' : 'user_status.created_at';
-            $sortDirection = $with_sort == 1 ? 'asc' : 'desc';
+            if ($status !== null) {
+                $query->where('vehicle_brand.status', $status);
+            }
 
-            $data = $query
-                ->orderBy($sortField, $sortDirection)
+            $data = $query->orderBy('vehicle_brand.created_at', 'desc')
                 ->paginate($perPage)
-                ->withPath(env('DASHBOARD_URL') . '/user-status')
+                ->withPath(env('DASHBOARD_URL') . '/vehicle-brand')
                 ->appends($request->query());
+
+            $hasFilter =
+                $request->filled('search') ||
+                $request->filled('status');
+
+            if ($data->total() === 0) {
+
+                $dataState = $hasFilter
+                    ? 'filtered_empty'
+                    : 'empty';
+
+            } else {
+
+                $dataState = 'has_data';
+
+            }
 
             return response()->json([
                 'status' => true,
                 'message' => 'Data retrieved successfully',
                 'data' => $data->items(),
+                'data_state' => $dataState,
                 'pagination' => [
                     'total' => $data->total(),
                     'per_page' => $data->perPage(),
@@ -78,5 +97,4 @@ class UserStatusController extends Controller
 
         }
     }
-
 }

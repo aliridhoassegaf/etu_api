@@ -7,10 +7,17 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdminRoleController;
 use App\Http\Controllers\AdminAccessController;
 use App\Http\Controllers\AdminActivityController;
+
 use App\Http\Controllers\UserStatusController;
 use App\Http\Controllers\UserAccessController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\UserActivityController;
+
+use App\Http\Controllers\VehicleSupplierController;
+use App\Http\Controllers\VehicleBrandController;
+use App\Http\Controllers\VehicleModelController;
+use App\Http\Controllers\VehicleController;
+use App\Http\Controllers\VehicleStatusController;
 
 Route::post('admin-login',[AdminController::class,'login']);
 Route::post('user-login',[UserController::class,'login']);
@@ -26,6 +33,12 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/user-status',[UserStatusController::class,'read']);
     Route::get('/user-access',[UserAccessController::class,'read']);
     Route::get('/user-activity',[UserActivityController::class,'read']);
+
+    Route::get('/vehicle',[VehicleController::class,'read']);
+    Route::get('/vehicle-supplier',[VehicleSupplierController::class,'read']);
+    Route::get('/vehicle-brand',[VehicleBrandController::class,'read']);
+    Route::get('/vehicle-model',[VehicleModelController::class,'read']);
+    Route::get('/vehicle-status',[VehicleStatusController::class,'read']);
 });
 
 

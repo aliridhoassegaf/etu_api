@@ -31,9 +31,11 @@ class UserController extends Controller
                 'user.user_role_id',
                 'user.status',
                 'user.created_at',
-                'user_role.name as user_role_name'
+                'user_role.name as user_role_name',
+                'user_status.name as status_name',
             )
-                ->join('user_role', 'user.user_role_id', '=', 'user_role.id');
+                ->join('user_role', 'user.user_role_id', '=', 'user_role.id')
+                ->join('user_status', 'user.status', '=', 'user_status.id');
 
             $query->where('user.id', '!=', env('UUID_SUPER'));
 

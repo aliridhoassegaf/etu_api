@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\UserStatus;
+use App\Models\VehicleStatus;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\AdminActivity;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class UserStatusController extends Controller
+class VehicleStatusController extends Controller
 {
     public function read(Request $request)
     {
@@ -20,28 +20,28 @@ class UserStatusController extends Controller
             $perPage = $request->per_page ?? 20;
             $with_sort = $request->with_sort;
 
-            $query = UserStatus::select(
-                'user_status.id',
-                'user_status.name',
-                'user_status.sort',
-                'user_status.status',
-                'user_status.created_at',
-                'user_status.updated_at',
+            $query = VehicleStatus::select(
+                'vehicle_status.id',
+                'vehicle_status.name',
+                'vehicle_status.sort',
+                'vehicle_status.status',
+                'vehicle_status.created_at',
+                'vehicle_status.updated_at',
             );
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('user_status.name', 'ilike', '%' . $search . '%');
+                    $q->where('vehicle_status.name', 'ilike', '%' . $search . '%');
                 });
             }
 
-            $sortField = $with_sort == 1 ? 'user_status.sort' : 'user_status.created_at';
+            $sortField = $with_sort == 1 ? 'vehicle_status.sort' : 'vehicle_status.created_at';
             $sortDirection = $with_sort == 1 ? 'asc' : 'desc';
 
             $data = $query
                 ->orderBy($sortField, $sortDirection)
                 ->paginate($perPage)
-                ->withPath(env('DASHBOARD_URL') . '/user-status')
+                ->withPath(env('DASHBOARD_URL') . '/vehicle-status')
                 ->appends($request->query());
 
             return response()->json([
