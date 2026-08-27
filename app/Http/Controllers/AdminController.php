@@ -14,6 +14,57 @@ use Illuminate\Support\Facades\DB;
 class AdminController extends Controller
 {
 
+    public function view($id)
+    {
+        try {
+            if ($id == env('UUID_SUPER')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+            $data = Admin::select(
+                'admin.id',
+                'admin.fullname',
+                'admin.email',
+                'admin.phone',
+                'admin.admin_role_id',
+                'admin.status',
+                'admin.created_at',
+                'admin.updated_at',
+                'admin_role.name as admin_role_name'
+            )
+                ->join('admin_role', 'admin.admin_role_id', '=', 'admin_role.id')
+                ->where('admin.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
     public function read(Request $request)
     {
         try {

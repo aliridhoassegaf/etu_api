@@ -12,6 +12,53 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class VehicleController extends Controller
 {
+    public function view($id)
+    {
+        try {
+            $data = Vehicle::select(
+                'vehicle.id',
+                'vehicle.description',
+                'vehicle.status',
+                'vehicle.created_at',
+                'vehicle_model.name as vehicle_model_name',
+                'vehicle_brand.name as vehicle_brand_name',
+                'vehicle_supplier.name as vehicle_supplier_name',
+                'vehicle_status.name as status_name',
+            )
+                ->join('vehicle_model', 'vehicle.vehicle_model_id', '=', 'vehicle_model.id')
+                ->join('vehicle_brand', 'vehicle.vehicle_brand_id', '=', 'vehicle_brand.id')
+                ->join('vehicle_supplier', 'vehicle.vehicle_supplier_id', '=', 'vehicle_supplier.id')
+                ->join('vehicle_status', 'vehicle.status', '=', 'vehicle_status.id')
+                ->where('vehicle.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
     public function read(Request $request)
     {
         try {

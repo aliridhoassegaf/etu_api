@@ -12,6 +12,56 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AdminRoleController extends Controller
 {
+    public function view($id)
+    {
+        try {
+            if ($id == env('UUID_SUPER')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+            $data = AdminRole::select(
+                'admin_role.id',
+                'admin_role.name',
+                'admin_role.slug',
+                'admin_role.admin_permission',
+                'admin_role.status',
+                'admin_role.created_at',
+                'admin_role.updated_at',
+            )
+                ->where('admin_role.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            $data->admin_permission = json_decode($data->admin_permission, true);
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
     public function read(Request $request)
     {
         try {

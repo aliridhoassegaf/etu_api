@@ -13,6 +13,57 @@ use Illuminate\Support\Facades\DB;
 
 class UserController extends Controller
 {
+    public function view($id)
+    {
+        try {
+            if ($id == env('UUID_SUPER')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+            $data = User::select(
+                'user.id',
+                'user.fullname',
+                'user.email',
+                'user.phone',
+                'user.user_role_id',
+                'user.status',
+                'user.created_at',
+                'user.updated_at',
+                'user_role.name as user_role_name'
+            )
+                ->join('user_role', 'user.user_role_id', '=', 'user_role.id')
+                ->where('user.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
 
     public function read(Request $request)
     {

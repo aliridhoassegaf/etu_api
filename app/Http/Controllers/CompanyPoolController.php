@@ -4,14 +4,56 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\VehicleBrand;
+use App\Models\CompanyPool;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\AdminActivity;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class VehicleBrandController extends Controller
+class CompanyPoolController extends Controller
 {
+    public function view($id)
+    {
+        try {
+            $data = CompanyPool::select(
+                'company_pool.id',
+                'company_pool.name',
+                'company_pool.slug',
+                'company_pool.description',
+                'company_pool.status',
+                'company_pool.created_at',
+                'company_pool.updated_at',
+            )
+                ->where('company_pool.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
     public function read(Request $request)
     {
         try {
@@ -20,30 +62,30 @@ class VehicleBrandController extends Controller
             $status = $request->status;
             $perPage = $request->per_page ?? 20;
 
-            $query = VehicleBrand::select(
-                'vehicle_brand.id',
-                'vehicle_brand.name',
-                'vehicle_brand.slug',
-                'vehicle_brand.description',
-                'vehicle_brand.status',
-                'vehicle_brand.created_at',
+            $query = CompanyPool::select(
+                'company_pool.id',
+                'company_pool.name',
+                'company_pool.slug',
+                'company_pool.description',
+                'company_pool.status',
+                'company_pool.created_at',
             );
 
-            $query->where('vehicle_brand.id', '!=', env('UUID_SUPER'));
+            $query->where('company_pool.id', '!=', env('UUID_SUPER'));
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('vehicle_brand.name', 'ilike', '%' . $search . '%');
+                    $q->where('company_pool.name', 'ilike', '%' . $search . '%');
                 });
             }
 
             if ($status !== null) {
-                $query->where('vehicle_brand.status', $status);
+                $query->where('company_pool.status', $status);
             }
 
-            $data = $query->orderBy('vehicle_brand.created_at', 'desc')
+            $data = $query->orderBy('company_pool.created_at', 'desc')
                 ->paginate($perPage)
-                ->withPath(env('DASHBOARD_URL') . '/vehicle-brand')
+                ->withPath(env('DASHBOARD_URL') . '/company-pool')
                 ->appends($request->query());
 
             $hasFilter =
@@ -81,49 +123,6 @@ class VehicleBrandController extends Controller
                     'prev_page_url' => $data->previousPageUrl(),
                     'path' => $data->path()
                 ]
-            ]);
-
-        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
-
-            return ApiResponse::tokenInvalid();
-
-        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
-
-            return ApiResponse::tokenExpired();
-
-        } catch (\Exception $e) {
-
-            return ApiResponse::serverError($e->getMessage());
-
-        }
-    }
-
-    public function view($id)
-    {
-        try {
-            $data = VehicleBrand::select(
-                'vehicle_brand.id',
-                'vehicle_brand.name',
-                'vehicle_brand.slug',
-                'vehicle_brand.description',
-                'vehicle_brand.status',
-                'vehicle_brand.created_at',
-                'vehicle_brand.updated_at',
-            )
-                ->where('vehicle_brand.id', $id)
-                ->first();
-
-            if (!$data) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Data not found'
-                ], 404);
-            }
-
-            return response()->json([
-                'status' => true,
-                'message' => 'Data retrieved successfully',
-                'data' => $data
             ]);
 
         } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {

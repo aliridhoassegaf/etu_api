@@ -97,4 +97,47 @@ class VehicleSupplierController extends Controller
 
         }
     }
+
+    public function view($id)
+    {
+        try {
+            $data = VehicleSupplier::select(
+                'vehicle_supplier.id',
+                'vehicle_supplier.name',
+                'vehicle_supplier.slug',
+                'vehicle_supplier.description',
+                'vehicle_supplier.status',
+                'vehicle_supplier.created_at',
+                'vehicle_supplier.updated_at',
+            )
+                ->where('vehicle_supplier.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
 }

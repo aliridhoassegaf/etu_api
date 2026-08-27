@@ -12,6 +12,51 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class VehicleModelController extends Controller
 {
+    public function view($id)
+    {
+        try {
+            $data = VehicleModel::select(
+                'vehicle_model.id',
+                'vehicle_model.name',
+                'vehicle_model.slug',
+                'vehicle_model.description',
+                'vehicle_model.vehicle_brand_id',
+                'vehicle_model.status',
+                'vehicle_model.created_at',
+                'vehicle_model.updated_at',
+                'vehicle_brand.name as vehicle_brand_name'
+            )
+                ->join('vehicle_brand', 'vehicle_model.vehicle_brand_id', '=', 'vehicle_brand.id')
+                ->where('vehicle_model.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
     public function read(Request $request)
     {
         try {
@@ -27,8 +72,10 @@ class VehicleModelController extends Controller
                 'vehicle_model.description',
                 'vehicle_model.status',
                 'vehicle_model.created_at',
-            );
-
+                'vehicle_brand.name as vehicle_brand_name'
+            )
+            ->join('vehicle_brand', 'vehicle_model.vehicle_brand_id', '=', 'vehicle_brand.id');
+    
             $query->where('vehicle_model.id', '!=', env('UUID_SUPER'));
 
             if ($search) {

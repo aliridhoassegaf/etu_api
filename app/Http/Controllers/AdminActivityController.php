@@ -11,6 +11,59 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AdminActivityController extends Controller
 {
+    public function view($id)
+    {
+        try {
+            if ($id == env('UUID_SUPER')) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+            $data = AdminActivity::select(
+                'admin_activity.id',
+                'admin_activity.target_id',
+                'admin_activity.target_name',
+                'admin_activity.description',
+                'admin_activity.ip',
+                'admin_activity.changes',
+                'admin_activity.admin_id',
+                'admin_activity.created_at',
+                'admin_activity.action',
+                'admin_activity.message',
+                'admin.fullname as admin_fullname'
+            )
+                ->join('admin', 'admin_activity.admin_id', '=', 'admin.id')
+                ->where('admin_activity.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
     public function read(Request $request)
     {
         try {
