@@ -26,6 +26,7 @@ Route::post('user-login',[UserController::class,'login']);
 Route::middleware(['jwt.auth'])->group(function () {
     Route::get('/admin',[AdminController::class,'read']);
     Route::get('/admin/{id}', [AdminController::class,'view']);
+    Route::post('/admin-logout',[AdminController::class,'logout']);
 
     Route::get('/admin-role',[AdminRoleController::class,'read']);
     Route::get('/admin-role/{id}', [AdminRoleController::class,'view']);

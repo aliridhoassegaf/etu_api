@@ -13,6 +13,32 @@ use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
+    public function logout(Request $request)
+    {
+        try {
+
+            JWTAuth::invalidate(JWTAuth::getToken());
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Your session has expired. Please login again to continue'
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+
+    }
 
     public function view($id)
     {
