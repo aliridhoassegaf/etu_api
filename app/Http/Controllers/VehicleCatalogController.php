@@ -4,49 +4,55 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\VehicleBrand;
+use App\Models\VehicleCatalog;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\AdminActivity;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class VehicleBrandController extends Controller
+class VehicleCatalogController extends Controller
 {
     public function read(Request $request)
     {
         try {
 
-            $search = $request->search;
             $status = $request->status;
+            $vehicle_model_id = $request->vehicle_model_id;
             $perPage = $request->per_page ?? 20;
+            $with_sort = $request->with_sort;
 
-            $query = VehicleBrand::select(
-                'vehicle_brand.id',
-                'vehicle_brand.name',
-                'vehicle_brand.slug',
-                'vehicle_brand.status',
-                'vehicle_brand.created_at',
-            );
-
-            $query->where('vehicle_brand.id', '!=', env('UUID_SUPER'));
-
-            if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('vehicle_brand.name', 'ilike', '%' . $search . '%');
-                });
-            }
+            $query = VehicleCatalog::select(
+                'vehicle_catalog.id',
+                'vehicle_catalog.vehicle_model_id',
+                'vehicle_catalog.description',
+                'vehicle_catalog.sort',
+                'vehicle_catalog.status',
+                'vehicle_catalog.created_at',
+                'vehicle_model.name as vehicle_model_name',
+                'vehicle_brand.name as vehicle_brand_name'
+            )
+            ->join('vehicle_model', 'vehicle_catalog.vehicle_model_id', '=', 'vehicle_model.id')
+            ->join('vehicle_brand', 'vehicle_model.vehicle_brand_id', '=', 'vehicle_brand.id');
 
             if ($status !== null) {
-                $query->where('vehicle_brand.status', $status);
+                $query->where('vehicle_catalog.status', $status);
             }
 
-            $data = $query->orderBy('vehicle_brand.created_at', 'desc')
+            if ($vehicle_model_id !== null) {
+                $query->where('vehicle_catalog.vehicle_model_id', $vehicle_model_id);
+            }
+
+            $sortField = $with_sort == 1 ? 'vehicle_catalog.sort' : 'vehicle_catalog.created_at';
+            $sortDirection = $with_sort == 1 ? 'asc' : 'desc';
+
+            $data = $query
+                ->orderBy($sortField, $sortDirection)
                 ->paginate($perPage)
-                ->withPath(env('DASHBOARD_URL') . '/vehicle-brand')
+                ->withPath(env('DASHBOARD_URL') . '/vehicle-catalog')
                 ->appends($request->query());
 
             $hasFilter =
-                $request->filled('search') ||
+                $request->filled('vehicle_model_id') ||
                 $request->filled('status');
 
             if ($data->total() === 0) {
@@ -100,15 +106,19 @@ class VehicleBrandController extends Controller
     public function view($id)
     {
         try {
-            $data = VehicleBrand::select(
-                'vehicle_brand.id',
-                'vehicle_brand.name',
-                'vehicle_brand.slug',
-                'vehicle_brand.status',
-                'vehicle_brand.created_at',
-                'vehicle_brand.updated_at',
+            $data = VehicleCatalog::select(
+                'vehicle_catalog.id',
+                'vehicle_catalog.vehicle_model_id',
+                'vehicle_catalog.description',
+                'vehicle_catalog.sort',
+                'vehicle_catalog.status',
+                'vehicle_catalog.created_at',
+                'vehicle_model.name as vehicle_model_name',
+                'vehicle_brand.name as vehicle_brand_name'
             )
-                ->where('vehicle_brand.id', $id)
+                ->join('vehicle_model', 'vehicle_catalog.vehicle_model_id', '=', 'vehicle_model.id')
+                ->join('vehicle_brand', 'vehicle_model.vehicle_brand_id', '=', 'vehicle_brand.id')
+                ->where('vehicle_catalog.id', $id)
                 ->first();
 
             if (!$data) {

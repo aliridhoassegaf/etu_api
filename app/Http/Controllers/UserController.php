@@ -10,6 +10,9 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Helpers\ApiResponse;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
+use App\Models\UserOnlineApplication;
+use App\Models\UserLeadSource;
 
 class UserController extends Controller
 {
@@ -24,18 +27,111 @@ class UserController extends Controller
             }
             $data = User::select(
                 'user.id',
-                'user.fullname',
+                'user.full_name',
                 'user.email',
                 'user.phone',
                 'user.user_role_id',
                 'user.status',
+                'user.nik',
+                'user.dob',
+                'user.sim_number',
+                DB::raw("
+                    CONCAT(
+                        '" . env('DASHBOARD_URL') . "/',
+                        'assets/img/temp/',
+                        \"user\".\"selfie_photo\"
+                    ) AS selfie_photo
+                "),
+                DB::raw("
+                    CONCAT(
+                        '" . env('DASHBOARD_URL') . "/',
+                        'assets/img/temp/',
+                        \"user\".\"id_card_photo\"
+                    ) AS id_card_photo
+                "),
+                DB::raw("
+                    CONCAT(
+                        '" . env('DASHBOARD_URL') . "/',
+                        'assets/img/temp/',
+                        \"user\".\"sim_photo\"
+                    ) AS sim_photo
+                "),
+                DB::raw("
+                    CONCAT(
+                        '" . env('DASHBOARD_URL') . "/',
+                        'assets/img/temp/',
+                        \"user\".\"family_card_photo\"
+                    ) AS family_card_photo
+                "),
                 'user.created_at',
                 'user.updated_at',
-                'user_role.name as user_role_name'
+                'user.user_online_application_id',
+                'user.user_lead_source_id',
+                'user_role.name as user_role_name',
+                'user_status.name as status_name',
+                'user_education.name as user_education_name',
+                'user_sim_type.name as user_sim_type_name',
+                'user_length_of_stay.name as user_length_of_stay_name',
+                'user_work_experience.name as user_work_experience_name',
+                'user_role.name as user_role_name',
+                'kp.name as province_name',
+                'kc.name as city_name',
+                'kd.name as district_name',
+                'kv.name as village_name',
+                'user.full_address',
             )
-                ->join('user_role', 'user.user_role_id', '=', 'user_role.id')
+                ->leftJoin('user_role', 'user.user_role_id', '=', 'user_role.id')
+                ->leftJoin('user_status', 'user.status', '=', 'user_status.id')
+                ->leftJoin('user_education', 'user.user_education_id', '=', 'user_education.id')
+                ->leftJoin('user_sim_type', 'user.user_sim_type_id', '=', 'user_sim_type.id')
+                ->leftJoin('user_length_of_stay', 'user.user_length_of_stay_id', '=', 'user_length_of_stay.id')
+                ->leftJoin('user_work_experience', 'user.user_work_experience_id', '=', 'user_work_experience.id')
+                ->leftJoin('location_province as kp', 'user.location_province_id', '=', 'kp.id')
+                ->leftJoin('location_regency as kc', 'user.location_city_id', '=', 'kc.id')
+                ->leftJoin('location_district as kd', 'user.location_district_id', '=', 'kd.id')
+                ->leftJoin('location_village as kv', 'user.location_village_id', '=', 'kv.id')
                 ->where('user.id', $id)
                 ->first();
+
+            if ($data && $data->dob) {
+                $data->dob_format = Carbon::parse($data->dob)
+                    ->locale('id')
+                    ->translatedFormat('d F Y');
+            }
+
+            if ($data) {
+
+                // Online Application
+                $applicationIds = json_decode(
+                    $data->user_online_application_id,
+                    true
+                ) ?? [];
+
+                $applicationIds = array_map('intval', $applicationIds);
+
+                $applicationNames = UserOnlineApplication::whereIn('id', $applicationIds)
+                    ->pluck('name')
+                    ->implode(', ');
+
+                $data->user_online_application_id = $applicationIds;
+                $data->user_online_application_name = $applicationNames;
+
+
+                // Lead Source
+                $leadSourceIds = json_decode(
+                    $data->user_lead_source_id,
+                    true
+                ) ?? [];
+
+                $leadSourceIds = array_map('intval', $leadSourceIds);
+
+                $leadSourceNames = UserLeadSource::whereIn('id', $leadSourceIds)
+                    ->pluck('name')
+                    ->implode(', ');
+
+                $data->user_lead_source_id = $leadSourceIds;
+                $data->user_lead_source_name = $leadSourceNames;
+            }
 
             if (!$data) {
                 return response()->json([
@@ -76,23 +172,24 @@ class UserController extends Controller
 
             $query = User::select(
                 'user.id',
-                'user.fullname',
+                'user.full_name',
                 'user.email',
                 'user.phone',
                 'user.user_role_id',
                 'user.status',
+                'user.nik',
                 'user.created_at',
-                'user_role.name as user_role_name',
                 'user_status.name as status_name',
             )
-                ->join('user_role', 'user.user_role_id', '=', 'user_role.id')
                 ->join('user_status', 'user.status', '=', 'user_status.id');
 
             $query->where('user.id', '!=', env('UUID_SUPER'));
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('user.fullname', 'ilike', '%' . $search . '%')
+                    $q->where('user.full_name', 'ilike', '%' . $search . '%')
+                        ->orWhere('user.nik', 'ilike', '%' . $search . '%')
+                        ->orWhere('user.phone', 'ilike', '%' . $search . '%')
                         ->orWhere('user.email', 'ilike', '%' . $search . '%');
                 });
             }
@@ -182,7 +279,7 @@ class UserController extends Controller
 
             $user = User::select(
                 'user.id',
-                'user.fullname',
+                'user.full_name',
                 'user.email',
                 'user.password',
                 'user.status',
@@ -231,7 +328,7 @@ class UserController extends Controller
                     'token' => $token,
                     'user' => [
                         'id' => $user->id,
-                        'fullname' => $user->fullname,
+                        'full_name' => $user->full_name,
                         'email' => $user->email,
                         'role_id' => $user->user_role_id,
                         'role' => $user->role_name,

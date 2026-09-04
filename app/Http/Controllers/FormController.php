@@ -4,13 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\UserRole;
+use App\Models\Form;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\AdminActivity;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class UserRoleController extends Controller
+class FormController extends Controller
 {
     public function read(Request $request)
     {
@@ -20,29 +20,30 @@ class UserRoleController extends Controller
             $status = $request->status;
             $perPage = $request->per_page ?? 20;
 
-            $query = UserRole::select(
-                'user_role.id',
-                'user_role.name',
-                'user_role.description',
-                'user_role.status',
-                'user_role.created_at',
+            $query = Form::select(
+                'form.id',
+                'form.name',
+                'form.slug',
+                'form.description',
+                'form.status',
+                'form.created_at',
             );
 
-            $query->where('user_role.id', '!=', env('UUID_SUPER'));
+            $query->where('form.id', '!=', env('UUID_SUPER'));
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('user_role.name', 'ilike', '%' . $search . '%');
+                    $q->where('form.name', 'ilike', '%' . $search . '%');
                 });
             }
 
             if ($status !== null) {
-                $query->where('user_role.status', $status);
+                $query->where('form.status', $status);
             }
 
-            $data = $query->orderBy('user_role.created_at', 'desc')
+            $data = $query->orderBy('form.created_at', 'desc')
                 ->paginate($perPage)
-                ->withPath(env('DASHBOARD_URL') . '/user-role')
+                ->withPath(env('DASHBOARD_URL') . '/form')
                 ->appends($request->query());
 
             $hasFilter =
@@ -80,6 +81,49 @@ class UserRoleController extends Controller
                     'prev_page_url' => $data->previousPageUrl(),
                     'path' => $data->path()
                 ]
+            ]);
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+
+            return ApiResponse::tokenInvalid();
+
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+
+            return ApiResponse::tokenExpired();
+
+        } catch (\Exception $e) {
+
+            return ApiResponse::serverError($e->getMessage());
+
+        }
+    }
+
+    public function view($id)
+    {
+        try {
+            $data = Form::select(
+                'form.id',
+                'form.name',
+                'form.slug',
+                'form.description',
+                'form.status',
+                'form.created_at',
+                'form.updated_at',
+            )
+                ->where('form.id', $id)
+                ->first();
+
+            if (!$data) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Data not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => true,
+                'message' => 'Data retrieved successfully',
+                'data' => $data
             ]);
 
         } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {

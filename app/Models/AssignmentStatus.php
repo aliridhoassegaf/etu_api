@@ -6,19 +6,21 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
-class VehicleBrand extends Model
+class AssignmentStatus extends Model
 {
-    protected $table = 'vehicle_brand';
+    protected $table = 'assignment_status';
 
     protected $primaryKey = 'id';
 
-    public $incrementing = false;
+    public $timestamps = false;
 
-    protected $keyType = 'string';
+    public $incrementing = true;
+
+    protected $keyType = 'int';
 
     protected $fillable = [
         'name',
-        'status'
+        'status',
     ];
 
     protected static function boot()
@@ -26,20 +28,8 @@ class VehicleBrand extends Model
         parent::boot();
 
         static::creating(function ($model) {
-
             if (!$model->id) {
                 $model->id = (string) Str::uuid();
-            }
-
-            if (!$model->slug && $model->name) {
-                $slug = Str::slug($model->name);
-                $model->slug = $slug;
-            }
-        });
-
-        static::updating(function ($model) {
-            if ($model->isDirty('name')) {
-                $model->slug = Str::slug($model->name);
             }
         });
     }

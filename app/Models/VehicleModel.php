@@ -18,7 +18,6 @@ class VehicleModel extends Model
 
     protected $fillable = [
         'name',
-        'description',
         'status'
     ];
 
@@ -66,7 +65,27 @@ class VehicleModel extends Model
         };
     }
 
+    public function getTransmissionNameAttribute()
+    {
+        return match ((int) $this->transmission) {
+            1 => 'Matic',
+            2 => 'Manual',
+            default => 'Unknown',
+        };
+    }
+
+    public function getWheelTypeNameAttribute()
+    {
+        return match ((int) $this->transmission) {
+            1 => '4 Wheeler',
+            2 => '2 Wheeler',
+            default => 'Unknown',
+        };
+    }
+
     protected $appends = [
         'status_name',
+        'transmission_name',
+        'wheel_type_name',
     ];
 }

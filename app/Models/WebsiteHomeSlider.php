@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
-class Admin extends Authenticatable implements JWTSubject
+class WebsiteHomeSlider extends Model
 {
-    protected $table = 'admin';
+    protected $table = 'website_home_slider';
 
     protected $primaryKey = 'id';
 
@@ -18,11 +17,13 @@ class Admin extends Authenticatable implements JWTSubject
     protected $keyType = 'string';
 
     protected $fillable = [
-        'full_name',
-        'email',
-        'password',
-        'admin_role_id',
-        'status'
+        'name',
+        'title',
+        'description',
+        'image',
+        'sort',
+        'status',
+        'url'
     ];
 
     protected static function boot()
@@ -35,39 +36,32 @@ class Admin extends Authenticatable implements JWTSubject
                 $model->id = (string) Str::uuid();
             }
 
-            if (!$model->slug && $model->full_name) {
-                $slug = Str::slug($model->full_name);
-
-                $count = self::where('slug', 'like', $slug . '%')->count();
-                $model->slug = $count ? $slug . '-' . ($count + 1) : $slug;
+            if (!$model->slug && $model->name) {
+                $slug = Str::slug($model->name);
+                $model->slug = $slug;
             }
 
         });
 
         static::updating(function ($model) {
-            if ($model->isDirty('full_name')) {
-                $model->slug = Str::slug($model->full_name);
+            if ($model->isDirty('name')) {
+                $model->slug = Str::slug($model->name);
             }
         });
+
     }
 
     public function getCreatedAtAttribute()
     {
         return Carbon::parse($this->attributes['created_at'], 'Asia/Jakarta')
-            ->locale('id')
             ->translatedFormat('d F Y H:i:s');
     }
 
     public function getUpdatedAtAttribute()
     {
         return Carbon::parse($this->attributes['updated_at'], 'Asia/Jakarta')
-            ->locale('id')
             ->translatedFormat('d F Y H:i:s');
     }
-
-    protected $hidden = [
-        'password'
-    ];
 
     public function getStatusNameAttribute()
     {
@@ -81,14 +75,4 @@ class Admin extends Authenticatable implements JWTSubject
     protected $appends = [
         'status_name',
     ];
-
-    public function getJWTIdentifier()
-    {
-        return $this->getKey();
-    }
-
-    public function getJWTCustomClaims()
-    {
-        return [];
-    }
 }

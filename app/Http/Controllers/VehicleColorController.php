@@ -4,45 +4,43 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\UserRole;
+use App\Models\VehicleColor;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\AdminActivity;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class UserRoleController extends Controller
+class VehicleColorController extends Controller
 {
     public function read(Request $request)
     {
         try {
 
             $search = $request->search;
-            $status = $request->status;
             $perPage = $request->per_page ?? 20;
+            $with_sort = $request->with_sort;
 
-            $query = UserRole::select(
-                'user_role.id',
-                'user_role.name',
-                'user_role.description',
-                'user_role.status',
-                'user_role.created_at',
+            $query = VehicleColor::select(
+                'vehicle_color.id',
+                'vehicle_color.name',
+                'vehicle_color.status',
+                'vehicle_color.created_at',
+                'vehicle_color.updated_at',
             );
-
-            $query->where('user_role.id', '!=', env('UUID_SUPER'));
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('user_role.name', 'ilike', '%' . $search . '%');
+                    $q->where('vehicle_color.name', 'ilike', '%' . $search . '%');
                 });
             }
 
-            if ($status !== null) {
-                $query->where('user_role.status', $status);
-            }
+            $sortField = $with_sort == 1 ? 'vehicle_color.name' : 'vehicle_color.created_at';
+            $sortDirection = $with_sort == 1 ? 'asc' : 'desc';
 
-            $data = $query->orderBy('user_role.created_at', 'desc')
+            $data = $query
+                ->orderBy($sortField, $sortDirection)
                 ->paginate($perPage)
-                ->withPath(env('DASHBOARD_URL') . '/user-role')
+                ->withPath(env('DASHBOARD_URL') . '/vehicle-color')
                 ->appends($request->query());
 
             $hasFilter =
@@ -96,4 +94,5 @@ class UserRoleController extends Controller
 
         }
     }
+
 }

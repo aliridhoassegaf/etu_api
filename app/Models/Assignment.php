@@ -6,9 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
-class VehicleBrand extends Model
+class Assignment extends Model
 {
-    protected $table = 'vehicle_brand';
+    protected $table = 'assignment';
 
     protected $primaryKey = 'id';
 
@@ -17,7 +17,11 @@ class VehicleBrand extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'name',
+        'vehicle_id',
+        'user_id',
+        'company_vehicle_rental_period_id',
+        'start_date',
+        'end_date',
         'status'
     ];
 
@@ -31,16 +35,6 @@ class VehicleBrand extends Model
                 $model->id = (string) Str::uuid();
             }
 
-            if (!$model->slug && $model->name) {
-                $slug = Str::slug($model->name);
-                $model->slug = $slug;
-            }
-        });
-
-        static::updating(function ($model) {
-            if ($model->isDirty('name')) {
-                $model->slug = Str::slug($model->name);
-            }
         });
     }
 
@@ -56,16 +50,16 @@ class VehicleBrand extends Model
             ->translatedFormat('d F Y H:i:s');
     }
 
-    public function getStatusNameAttribute()
+    public function getStartDateAttribute()
     {
-        return match ((int) $this->status) {
-            1 => 'Active',
-            2 => 'Not Active',
-            default => 'Unknown',
-        };
+        return Carbon::parse($this->attributes['start_date'], 'Asia/Jakarta')
+            ->translatedFormat('d F Y');
     }
 
-    protected $appends = [
-        'status_name',
-    ];
+    public function getEndDateAttribute()
+    {
+        return Carbon::parse($this->attributes['end_date'], 'Asia/Jakarta')
+            ->translatedFormat('d F Y');
+    }
+
 }

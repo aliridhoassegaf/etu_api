@@ -4,45 +4,44 @@ namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Models\UserRole;
+use App\Models\UserEducation;
 use App\Helpers\ApiResponse;
 use Illuminate\Support\Facades\DB;
 use App\Models\AdminActivity;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-class UserRoleController extends Controller
+class UserEducationController extends Controller
 {
     public function read(Request $request)
     {
         try {
 
             $search = $request->search;
-            $status = $request->status;
             $perPage = $request->per_page ?? 20;
+            $with_sort = $request->with_sort;
 
-            $query = UserRole::select(
-                'user_role.id',
-                'user_role.name',
-                'user_role.description',
-                'user_role.status',
-                'user_role.created_at',
+            $query = UserEducation::select(
+                'user_education.id',
+                'user_education.name',
+                'user_education.sort',
+                'user_education.status',
+                'user_education.created_at',
+                'user_education.updated_at',
             );
-
-            $query->where('user_role.id', '!=', env('UUID_SUPER'));
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('user_role.name', 'ilike', '%' . $search . '%');
+                    $q->where('user_education.name', 'ilike', '%' . $search . '%');
                 });
             }
 
-            if ($status !== null) {
-                $query->where('user_role.status', $status);
-            }
+            $sortField = $with_sort == 1 ? 'user_education.name' : 'user_education.created_at';
+            $sortDirection = $with_sort == 1 ? 'asc' : 'desc';
 
-            $data = $query->orderBy('user_role.created_at', 'desc')
+            $data = $query
+                ->orderBy($sortField, $sortDirection)
                 ->paginate($perPage)
-                ->withPath(env('DASHBOARD_URL') . '/user-role')
+                ->withPath(env('DASHBOARD_URL') . '/user-education')
                 ->appends($request->query());
 
             $hasFilter =
@@ -96,4 +95,5 @@ class UserRoleController extends Controller
 
         }
     }
+
 }

@@ -24,7 +24,6 @@ class AdminRoleController extends Controller
             $data = AdminRole::select(
                 'admin_role.id',
                 'admin_role.name',
-                'admin_role.slug',
                 'admin_role.admin_permission',
                 'admin_role.status',
                 'admin_role.created_at',
@@ -73,7 +72,6 @@ class AdminRoleController extends Controller
             $query = AdminRole::select(
                 'admin_role.id',
                 'admin_role.name',
-                'admin_role.slug',
                 'admin_role.description',
                 'admin_role.status',
                 'admin_role.created_at',

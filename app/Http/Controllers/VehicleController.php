@@ -17,18 +17,36 @@ class VehicleController extends Controller
         try {
             $data = Vehicle::select(
                 'vehicle.id',
-                'vehicle.description',
+                'vehicle.vehicle_brand_id',
                 'vehicle.status',
                 'vehicle.created_at',
+                'vehicle.updated_at',
+                'vehicle.description',
+                'vehicle.vehicle_model_id',
+                'vehicle.vehicle_supplier_id',
+                'vehicle.plat_number',
+                'vehicle.year',
+                'vehicle.company_pool_id',
+                'vehicle.stnk_expire_date',
+                'vehicle.frame_number',
+                'vehicle.engine_number',
+                'vehicle.document_stnk',
+                'vehicle.document_photo',
+                'vehicle.document_bbm_barcode',
                 'vehicle_model.name as vehicle_model_name',
                 'vehicle_brand.name as vehicle_brand_name',
                 'vehicle_supplier.name as vehicle_supplier_name',
                 'vehicle_status.name as status_name',
+                'vehicle_color.name as vehicle_color_name',
+                'vehicle_type.name as vehicle_type_name',
             )
                 ->join('vehicle_model', 'vehicle.vehicle_model_id', '=', 'vehicle_model.id')
                 ->join('vehicle_brand', 'vehicle.vehicle_brand_id', '=', 'vehicle_brand.id')
                 ->join('vehicle_supplier', 'vehicle.vehicle_supplier_id', '=', 'vehicle_supplier.id')
                 ->join('vehicle_status', 'vehicle.status', '=', 'vehicle_status.id')
+                ->join('company_pool', 'vehicle.company_pool_id', '=', 'company_pool.id')
+                ->join('vehicle_color', 'vehicle.vehicle_color_id', '=', 'vehicle_color.id')
+                ->join('vehicle_type', 'vehicle.vehicle_type_id', '=', 'vehicle_type.id')
                 ->where('vehicle.id', $id)
                 ->first();
 
@@ -67,21 +85,29 @@ class VehicleController extends Controller
             $vehicle_model_id = $request->vehicle_model_id;
             $vehicle_brand_id = $request->vehicle_brand_id;
             $vehicle_supplier_id = $request->vehicle_supplier_id;
+            $vehicle_color_id = $request->vehicle_color_id;
+            $company_pool_id = $request->company_pool_id;
             $perPage = $request->per_page ?? 20;
 
             $query = Vehicle::select(
                 'vehicle.id',
                 'vehicle.description',
+                'vehicle.plat_number',
+                'vehicle.year',
                 'vehicle.status',
                 'vehicle.created_at',
                 'vehicle_model.name as vehicle_model_name',
                 'vehicle_brand.name as vehicle_brand_name',
                 'vehicle_supplier.name as vehicle_supplier_name',
                 'vehicle_status.name as status_name',
+                'vehicle_color.name as vehicle_color_name',
+                'vehicle_type.name as vehicle_type_name',
             )
             ->join('vehicle_model', 'vehicle.vehicle_model_id', '=', 'vehicle_model.id')
             ->join('vehicle_brand', 'vehicle.vehicle_brand_id', '=', 'vehicle_brand.id')
             ->join('vehicle_supplier', 'vehicle.vehicle_supplier_id', '=', 'vehicle_supplier.id')
+            ->join('vehicle_color', 'vehicle.vehicle_color_id', '=', 'vehicle_color.id')
+            ->join('vehicle_type', 'vehicle.vehicle_type_id', '=', 'vehicle_type.id')
             ->join('vehicle_status', 'vehicle.status', '=', 'vehicle_status.id');
 
             $query->where('vehicle.id', '!=', env('UUID_SUPER'));
@@ -96,6 +122,14 @@ class VehicleController extends Controller
 
             if ($vehicle_brand_id !== null) {
                 $query->where('vehicle.vehicle_brand_id', $vehicle_brand_id);
+            }
+
+            if ($vehicle_color_id !== null) {
+                $query->where('vehicle.vehicle_color_id', $vehicle_color_id);
+            }
+            
+            if ($company_pool_id !== null) {
+                $query->where('vehicle.company_pool_id', $company_pool_id);
             }
 
             if ($vehicle_supplier_id !== null) {

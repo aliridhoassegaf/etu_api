@@ -19,14 +19,16 @@ class VehicleModelController extends Controller
                 'vehicle_model.id',
                 'vehicle_model.name',
                 'vehicle_model.slug',
-                'vehicle_model.description',
                 'vehicle_model.vehicle_brand_id',
+                'vehicle_model.transmission',
                 'vehicle_model.status',
                 'vehicle_model.created_at',
                 'vehicle_model.updated_at',
-                'vehicle_brand.name as vehicle_brand_name'
+                'vehicle_brand.name as vehicle_brand_name',
+                'vehicle_fuel.name as vehicle_fuel_name',
             )
                 ->join('vehicle_brand', 'vehicle_model.vehicle_brand_id', '=', 'vehicle_brand.id')
+                ->join('vehicle_fuel', 'vehicle_model.vehicle_fuel_id', '=', 'vehicle_fuel.id')
                 ->where('vehicle_model.id', $id)
                 ->first();
 
@@ -62,6 +64,8 @@ class VehicleModelController extends Controller
         try {
 
             $search = $request->search;
+            $vehicle_brand_id = $request->vehicle_brand_id;
+            $vehicle_fuel_id = $request->vehicle_fuel_id;
             $status = $request->status;
             $perPage = $request->per_page ?? 20;
 
@@ -69,19 +73,28 @@ class VehicleModelController extends Controller
                 'vehicle_model.id',
                 'vehicle_model.name',
                 'vehicle_model.slug',
-                'vehicle_model.description',
                 'vehicle_model.status',
+                'vehicle_model.transmission',
                 'vehicle_model.created_at',
-                'vehicle_brand.name as vehicle_brand_name'
+                'vehicle_brand.name as vehicle_brand_name',
+                'vehicle_fuel.name as vehicle_fuel_name',
             )
-            ->join('vehicle_brand', 'vehicle_model.vehicle_brand_id', '=', 'vehicle_brand.id');
+            ->join('vehicle_brand', 'vehicle_model.vehicle_brand_id', '=', 'vehicle_brand.id')
+            ->join('vehicle_fuel', 'vehicle_model.vehicle_fuel_id', '=', 'vehicle_fuel.id');
     
-            $query->where('vehicle_model.id', '!=', env('UUID_SUPER'));
-
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('vehicle_model.name', 'ilike', '%' . $search . '%');
+                    $q->where('vehicle_model.name', 'ilike', '%' . $search . '%')
+                        ->orWhere('vehicle_brand.name', 'ilike', '%' . $search . '%');
                 });
+            }
+
+            if ($vehicle_brand_id !== null) {
+                $query->where('vehicle_model.vehicle_brand_id', $vehicle_brand_id);
+            }
+
+            if ($vehicle_fuel_id !== null) {
+                $query->where('vehicle_model.vehicle_fuel_id', $vehicle_fuel_id);
             }
 
             if ($status !== null) {
@@ -95,6 +108,8 @@ class VehicleModelController extends Controller
 
             $hasFilter =
                 $request->filled('search') ||
+                $request->filled('vehicle_brand_id') ||
+                $request->filled('vehicle_fuel_id') ||
                 $request->filled('status');
 
             if ($data->total() === 0) {

@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Tymon\JWTAuth\Contracts\JWTSubject;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
-class User extends Authenticatable implements JWTSubject
+class Form extends Model
 {
-    protected $table = 'user';
+    protected $table = 'form';
 
     protected $primaryKey = 'id';
 
@@ -18,12 +17,8 @@ class User extends Authenticatable implements JWTSubject
     protected $keyType = 'string';
 
     protected $fillable = [
-        'full_name',
-        'email',
-        'password',
-        'user_role_id',
-        'nik',
-        'dob',
+        'name',
+        'description',
         'status'
     ];
 
@@ -37,18 +32,15 @@ class User extends Authenticatable implements JWTSubject
                 $model->id = (string) Str::uuid();
             }
 
-            if (!$model->slug && $model->full_name) {
-                $slug = Str::slug($model->full_name);
-
-                $count = self::where('slug', 'like', $slug . '%')->count();
-                $model->slug = $count ? $slug . '-' . ($count + 1) : $slug;
+            if (!$model->slug && $model->name) {
+                $slug = Str::slug($model->name);
+                $model->slug = $slug;
             }
-
         });
 
         static::updating(function ($model) {
-            if ($model->isDirty('full_name')) {
-                $model->slug = Str::slug($model->full_name);
+            if ($model->isDirty('name')) {
+                $model->slug = Str::slug($model->name);
             }
         });
     }
@@ -56,28 +48,25 @@ class User extends Authenticatable implements JWTSubject
     public function getCreatedAtAttribute()
     {
         return Carbon::parse($this->attributes['created_at'], 'Asia/Jakarta')
-            ->locale('id')
             ->translatedFormat('d F Y H:i:s');
     }
 
     public function getUpdatedAtAttribute()
     {
         return Carbon::parse($this->attributes['updated_at'], 'Asia/Jakarta')
-            ->locale('id')
             ->translatedFormat('d F Y H:i:s');
     }
 
-    protected $hidden = [
-        'password'
-    ];
-    
-    public function getJWTIdentifier()
+    public function getStatusNameAttribute()
     {
-        return $this->getKey();
+        return match ((int) $this->status) {
+            1 => 'Active',
+            2 => 'Not Active',
+            default => 'Unknown',
+        };
     }
 
-    public function getJWTCustomClaims()
-    {
-        return [];
-    }
+    protected $appends = [
+        'status_name',
+    ];
 }

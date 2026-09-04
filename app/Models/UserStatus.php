@@ -14,13 +14,12 @@ class UserStatus extends Model
 
     public $timestamps = false;
 
-    public $incrementing = false;
+    public $incrementing = true;
 
-    protected $keyType = 'string';
+    protected $keyType = 'int';
 
     protected $fillable = [
         'name',
-        'sort',
         'status',
     ];
 

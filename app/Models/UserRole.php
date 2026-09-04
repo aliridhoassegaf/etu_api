@@ -33,16 +33,6 @@ class UserRole extends Model
                 $model->id = (string) Str::uuid();
             }
 
-            if (!$model->slug && $model->name) {
-                $slug = Str::slug($model->name);
-                $model->slug = $slug;
-            }
-        });
-
-        static::updating(function ($model) {
-            if ($model->isDirty('name')) {
-                $model->slug = Str::slug($model->name);
-            }
         });
     }
 

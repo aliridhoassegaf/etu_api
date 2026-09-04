@@ -35,7 +35,7 @@ class UserActivityController extends Controller
                 'user_activity.user_id',
                 'user_activity.action',
                 'user_activity.created_at',
-                'user.fullname as user_fullname'
+                'user.full_name as user_full_name'
             )
             ->join('user', 'user_activity.user_id', '=', 'user.id');
 

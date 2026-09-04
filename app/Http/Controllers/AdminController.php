@@ -51,7 +51,7 @@ class AdminController extends Controller
             }
             $data = Admin::select(
                 'admin.id',
-                'admin.fullname',
+                'admin.full_name',
                 'admin.email',
                 'admin.phone',
                 'admin.admin_role_id',
@@ -102,7 +102,8 @@ class AdminController extends Controller
 
             $query = Admin::select(
                 'admin.id',
-                'admin.fullname',
+                'admin.full_name',
+                'admin.slug',
                 'admin.email',
                 'admin.phone',
                 'admin.admin_role_id',
@@ -116,7 +117,7 @@ class AdminController extends Controller
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('admin.fullname', 'ilike', '%' . $search . '%')
+                    $q->where('admin.full_name', 'ilike', '%' . $search . '%')
                         ->orWhere('admin.email', 'ilike', '%' . $search . '%');
                 });
             }
@@ -206,7 +207,7 @@ class AdminController extends Controller
 
             $admin = Admin::select(
                 'admin.id',
-                'admin.fullname',
+                'admin.full_name',
                 'admin.email',
                 'admin.password',
                 'admin.status',
@@ -255,7 +256,7 @@ class AdminController extends Controller
                     'token' => $token,
                     'admin' => [
                         'id' => $admin->id,
-                        'fullname' => $admin->fullname,
+                        'full_name' => $admin->full_name,
                         'email' => $admin->email,
                         'role_id' => $admin->admin_role_id,
                         'role' => $admin->role_name,

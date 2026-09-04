@@ -17,6 +17,20 @@ class Vehicle extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
+        'vehicle_brand_id',
+        'vehicle_model_id',
+        'vehicle_supplier_id',
+        'vehicle_color_id',
+        'company_pool_id',
+        'plat_number',
+        'company_pool_id',
+        'stnk_expire_date',
+        'frame_number',
+        'engine_number',
+        'document_stnk',
+        'document_photo',
+        'document_bbm_barcode',
+        'color',
         'name',
         'description',
         'status'

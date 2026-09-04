@@ -31,7 +31,7 @@ class AdminActivityController extends Controller
                 'admin_activity.created_at',
                 'admin_activity.action',
                 'admin_activity.message',
-                'admin.fullname as admin_fullname'
+                'admin.full_name as admin_full_name'
             )
                 ->join('admin', 'admin_activity.admin_id', '=', 'admin.id')
                 ->where('admin_activity.id', $id)
@@ -88,7 +88,7 @@ class AdminActivityController extends Controller
                 'admin_activity.admin_id',
                 'admin_activity.action',
                 'admin_activity.created_at',
-                'admin.fullname as admin_fullname'
+                'admin.full_name as admin_full_name'
             )
             ->join('admin', 'admin_activity.admin_id', '=', 'admin.id');
 
